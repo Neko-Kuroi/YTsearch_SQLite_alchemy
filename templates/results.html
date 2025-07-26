@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Scraping Results...</title>
+</head>
+<body>
+    <h1>Scraping in progress... Please wait.</h1>
+    <div id="status">Checking status...</div>
+    <div id="results"></div>
+    <a href="{{ url_for('cancel') }}">Cancel and Start Over</a>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+
+        const pollStatus = setInterval(async () => {
+            const response = await fetch("{{ url_for('status') }}");
+            const data = await response.json();
+
+            if (data.status === 'complete') {
+                statusDiv.innerHTML = '<h2>✅ Scraping Complete!</h2>';
+                let fileLinks = '<h3>Downloads:</h3>';
+                data.files.forEach(file => {
+                    fileLinks += `<p><a href="/download/${file}">${file}</a></p>`;
+                });
+                resultsDiv.innerHTML = fileLinks;
+                clearInterval(pollStatus); // Stop polling
+            } else if (data.status === 'running') {
+                statusDiv.innerText += '.';
+            } else {
+                statusDiv.innerText = 'An error occurred.';
+                clearInterval(pollStatus);
+            }
+        }, 3000); // Poll every 3 seconds
+    </script>
+</body>
+</html>
